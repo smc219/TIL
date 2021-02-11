@@ -265,7 +265,7 @@ int builtin_cmd(char **argv)
  */
 void do_bgfg(char **argv) 
 {
-    
+    job_t j;
     if (argv[1] == NULL) 
     {
         printf("give jid or pid\n");
@@ -275,11 +275,11 @@ void do_bgfg(char **argv)
     // argv[1]에 %가 있는지를 확인.
     if(argv[1][0] == '%') //jid로 처리
     {
-        
+
     }
     else // pid로 처리
     {
-
+        j = getjobpid();
     }
 
     return;
