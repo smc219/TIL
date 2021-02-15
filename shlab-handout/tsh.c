@@ -1,10 +1,14 @@
 /*
-<<<<<<< HEAD
-    changed
+
 =======
     <2월 15일> 
-    어떻게 해야 tsh> 부분을 씹지 않고 프로그램 돌 수 있을까
->>>>>>> 7aec81d0117a677e26cab617b96381a98944d506
+    어떻게 해야 tsh> 부분을 씹지 않고 프로그램 돌 수 있을까.
+    -- 오늘 한 실수:
+    waitfg는 sigchld를 받으면 fg가 없어지면서 wait 상태를 종료한다
+    -> 근데 수정 전 코드는 sigprocmask(SIG_BLOCK, &mask, NULL)이 waitfg 뒤에 있었다 -> 당연히 절대 fg는 바뀌지 않고 결국 defunct 발생.
+     
+    내일은 sigint handler를 해보자...
+    
 */
 
 /* 
@@ -47,7 +51,7 @@
 /* Global variables */
 extern char **environ;   /* defined in libc */
 char prompt[] = "tsh> "; /* command line prompt (DO NOT CHANGE) */
-int verbose = 1;         /* if true, print additional output */
+int verbose = 0;         /* if true, print additional output */
 int nextjid = 1;         /* next job ID to allocate */
 char sbuf[MAXLINE];      /* for composing sprintf messages */
 
@@ -184,15 +188,22 @@ void eval(char *cmdline)
     char *parsedCmd[MAXARGS];
     int bg;
     pid_t pid;
-    
+    sigset_t mask;
+
     bg = parseline(cmdline, parsedCmd);
     if (parsedCmd[0] == NULL) return;
 
     if (!builtin_cmd(parsedCmd))
     {
+        sigemptyset(&mask);
+        sigaddset(&mask, SIGCHLD);
+        sigprocmask(SIG_BLOCK, &mask, NULL);
         // 현 위치에 fork를 통해서 자식 프로세스 구축
         if ((pid=fork()) == 0)
         {
+            setpgid(0, 0);
+            // 여기서 풀어줘야함
+            sigprocmask(SIG_UNBLOCK, &mask, NULL);
             if(execve(parsedCmd[0], parsedCmd, environ) < 0)
             {
                 printf("%s: Command not found\n", parsedCmd[0]);
@@ -205,14 +216,18 @@ void eval(char *cmdline)
             if (!bg) // background임
             {
                 addjob(jobs, pid, FG, cmdline);
-                int status;
+                sigprocmask(SIG_UNBLOCK, &mask, NULL); // waitfg 전에 풀어줘야 상태가 바뀐다...
                 waitfg(pid); // fg가 없어지면 끝난다.
             }
             else
             {
                 addjob(jobs, pid, BG, cmdline);
+                sigprocmask(SIG_UNBLOCK, &mask, NULL);
                 printf("[%d] %s", pid, cmdline);
             }
+            // addjoblist가 끝나고
+            
+
         }
     }
 }
@@ -367,7 +382,7 @@ void do_bgfg(char **argv)
 void waitfg(pid_t pid)
 {
     // fgpid는 fg가 없으면 0을 리턴한다. 만약에 fg가 있다면 멈춰있게 된다. 
-    while(fgpid(jobs) != 0){sleep(1);}
+    while(fgpid(jobs) != 0){}
     return;
 }
 
@@ -392,20 +407,22 @@ void sigchld_handler(int sig)
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0)
     {
         int jid = pid2jid(pid);
-    
-        if (WIFEXITED(pid))
+        if (jid == 0) return;
+        if (WIFEXITED(status)) // 오늘의 1멍청(2/15). status를 넣어줘야합니다..
         {
             // 해당 잡을 제거한다.
             deletejob(jobs, pid);
             if (verbose) printf("job :%d terminated Normally\n", jid);
         }
-        else if (WIFSTOPPED(pid))
+        else if (WIFSTOPPED(status))
         {
+ 
             getjobpid(jobs, pid)->state = ST;
             if (verbose) printf("job :%d Stopped Normally\n", jid);
         }
-        else if(WIFSIGNALED(pid))
+        else if(WIFSIGNALED(status))
         {
+            printf("signal : %d\n", WIFSIGNALED(pid));
             deletejob(jobs, pid);
             if (verbose) printf("job :%d %d Terminated, I dont know the reason\n", jid, pid);
         }
@@ -420,6 +437,7 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig)
 {
+    fgpid(jobs);
     return;
 }
 
