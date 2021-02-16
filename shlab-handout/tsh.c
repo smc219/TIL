@@ -1,14 +1,12 @@
 /*
 
 =======
+    <2월 16일>
+    오늘 한 실수는 killpg를 해주지 않은 것과(프로세스 전체를 죽이길 바라는 테스트가 있었다) -> setpgid를 사용해줘야한다는 뜻!
+    그리고 다른 하나는 sigstp handler를 수행하기 전에 builtin_cmd에서 killpg가 두번 사용돼서 -> 느려지고 -> 결과적으로 출력이 이상하게 꼬였다는 점
     <2월 15일> 
     어떻게 해야 tsh> 부분을 씹지 않고 프로그램 돌 수 있을까.
-    -- 오늘 한 실수:
-    waitfg는 sigchld를 받으면 fg가 없어지면서 wait 상태를 종료한다
-    -> 근데 수정 전 코드는 sigprocmask(SIG_BLOCK, &mask, NULL)이 waitfg 뒤에 있었다 -> 당연히 절대 fg는 바뀌지 않고 결국 defunct 발생.
-     
     내일은 sigint handler를 해보자...
-    
 */
 
 /* 
@@ -195,9 +193,11 @@ void eval(char *cmdline)
 
     if (!builtin_cmd(parsedCmd))
     {
-        sigemptyset(&mask);
-        sigaddset(&mask, SIGCHLD);
-        sigprocmask(SIG_BLOCK, &mask, NULL);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
+    sigaddset(&mask, SIGINT);
+    sigaddset(&mask, SIGSTOP);
+    sigprocmask(SIG_BLOCK, &mask, NULL);
         // 현 위치에 fork를 통해서 자식 프로세스 구축
         if ((pid=fork()) == 0)
         {
@@ -223,7 +223,7 @@ void eval(char *cmdline)
             {
                 addjob(jobs, pid, BG, cmdline);
                 sigprocmask(SIG_UNBLOCK, &mask, NULL);
-                printf("[%d] %s", pid, cmdline);
+                printf("[%d] (%d) %s",pid2jid(pid), pid, cmdline);
             }
             // addjoblist가 끝나고
             
@@ -330,49 +330,55 @@ void do_bgfg(char **argv)
     int status = strcmp(argv[0], "fg") ? BG : FG;
     if (argv[1] == NULL)
     {
-        printf("give jid or pid\n");
+        printf("%s command requires PID or %%jobid argument\n", argv[0]);
         return;
     }
-
+    int num = 0;
+    // string 처리해주고
+    for (int i = 0; argv[1][i]; ++i) 
+    {
+        if (i == 0 && (argv[1][i]=='%')) continue;
+        if (argv[1][i] < '0' || argv[1][i] > '9') 
+        {
+            printf("%s: argument must be a PID or %%jobid\n", argv[0]);
+            return;
+        }
+    }
+    
     // argv[1]에 %가 있는지를 확인.
     if (argv[1][0] == '%') //jid로 처리
     {
+        num = atoi(argv[1]+1);
         if (verbose) printf("job ID do_fgbg In\n");
-        int num = 0;
-        // string 처리해주고
-        for (int i = 1; argv[1][i]; ++i) 
-        {
-            if (argv[1][i] < '0' || argv[1][i] > '9') 
-            {
-                printf("Argv must be number\n");
-                return;
-            }
-            if (i > 1) num *= 10;
-            num += (argv[1][i] - '0');
-        }
+
         if (getjobjid(jobs, num) == NULL) 
         {
-            printf("You got the wrong jid\n");
+            printf("%%%d: No such job\n", num);
             return;
         }
+        killpg(getjobjid(jobs, num)->pid, SIGCONT);
         getjobjid(jobs, num)->state = status;
         if (status == FG) waitfg(getjobjid(jobs, num)->pid);
+        else printf("[%d] (%d) %s", num, getjobjid(jobs, num)->pid, getjobjid(jobs, num)->cmdline);
+      
     }
     else // pid로 처리
     {
-        for (int i = 0; argv[1][i]; ++i)
-        {
-            if (argv[1][i] < '0' || argv[1][i] > '9') 
-            {
-                printf("wrong pid format\n");
-                return;
-            }
-        }
+        
         pid = atoi(argv[1]);
+        if (pid == 1) printf("kill (fg) error: No such process\n");
+        if (getjobpid(jobs, pid) == NULL) 
+        {
+            printf("(%d): No such process\n", pid);
+            return;
+        }
         getjobpid(jobs, pid)->state = status;
-        if (status==FG) waitfg(getjobpid(jobs, pid));
+        killpg(pid, SIGCONT);
+        if (status==FG) waitfg(pid);
+        else printf("[%d] (%d) %s", pid2jid(pid), pid, getjobjid(jobs, pid)->cmdline);
 
     }
+    
     return;
 }
 
@@ -402,7 +408,6 @@ void sigchld_handler(int sig)
     // chld가 종료되면 세가지 경우를 확인해준다.
     // printf("Enter?\n");
     pid_t pid;
-    int jid;
     int status;
     while ((pid = waitpid(-1, &status, WNOHANG | WUNTRACED)) > 0)
     {
@@ -416,15 +421,15 @@ void sigchld_handler(int sig)
         }
         else if (WIFSTOPPED(status))
         {
- 
             getjobpid(jobs, pid)->state = ST;
             if (verbose) printf("job :%d Stopped Normally\n", jid);
+            printf("Job [%d] (%d) stopped by signal 20\n", jid, pid);
         }
         else if(WIFSIGNALED(status))
         {
-            printf("signal : %d\n", WIFSIGNALED(pid));
+            // printf("signal : %d\n", WIFSIGNALED(pid));
             deletejob(jobs, pid);
-            if (verbose) printf("job :%d %d Terminated, I dont know the reason\n", jid, pid);
+            printf("Job [%d] (%d) terminated by signal 2\n", jid, pid);
         }
     }
     // printf("Out?\n");
@@ -437,7 +442,8 @@ void sigchld_handler(int sig)
  */
 void sigint_handler(int sig)
 {
-    fgpid(jobs);
+    pid_t pid;
+    if ((pid=fgpid(jobs)) != 0) killpg(pid, SIGINT);
     return;
 }
 
@@ -448,6 +454,8 @@ void sigint_handler(int sig)
  */
 void sigtstp_handler(int sig)
 {
+    pid_t pid;
+    if ((pid=fgpid(jobs)) != 0) killpg(pid, SIGSTOP);
     return;
 }
 
@@ -678,6 +686,6 @@ handler_t *Signal(int signum, handler_t *handler)
  */
 void sigquit_handler(int sig)
 {
-    printf("Terminating after receipt of SIGQUIT signal\n");
+    if (verbose)printf("Terminating after receipt of SIGQUIT signal\n");
     exit(1);
 }
