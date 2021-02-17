@@ -78,7 +78,13 @@ var도 사용할 수 있지만 강의에서는 let을 권장
 
 ## Data Type
 
-
+- string
+  `const what = "Nicolas"`
+- Boolean
+  `const tf = true;` 와 같이 씀. 반대는 false. 똑같이 1, 0이다.
+- Float
+  `const what = 55.1;`
+- 
 
 
 

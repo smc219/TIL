@@ -9,7 +9,10 @@
     </configurations>
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d06888fa-bb55-4035-b7ce-56b80f5966de" name="Default Changelist" comment="2월 8일 cache lab" />
+    <list default="true" id="d06888fa-bb55-4035-b7ce-56b80f5966de" name="Default Changelist" comment="2월 8일 cache lab">
+      <change beforePath="$PROJECT_DIR$/Javascript/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/Javascript/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Javascript/theory.md" beforeDir="false" afterPath="$PROJECT_DIR$/Javascript/theory.md" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -52,6 +55,7 @@
       <workItem from="1612439122314" duration="4043000" />
       <workItem from="1612786999357" duration="3014000" />
       <workItem from="1612877136177" duration="867000" />
+      <workItem from="1613569807537" duration="106000" />
     </task>
     <task id="LOCAL-00001" summary="2월 8일 cache lab">
       <created>1612793380861</created>
