@@ -1,6 +1,7 @@
 file(REMOVE_RECURSE
   "Algospot"
   "Algospot.pdb"
+  "CMakeFiles/Algospot.dir/WILDCARD.cpp.o"
   "CMakeFiles/Algospot.dir/main.cpp.o"
 )
 

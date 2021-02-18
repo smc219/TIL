@@ -94,12 +94,12 @@ clean: CMakeFiles/Algospot.dir/clean
 CMakeFiles/Algospot.dir/all:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/depend
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Volumes/IMGBND06_smc/TIL/algospot/cmake-build-debug/CMakeFiles --progress-num=1,2 "Built target Algospot"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/Volumes/IMGBND06_smc/TIL/algospot/cmake-build-debug/CMakeFiles --progress-num=1,2,3 "Built target Algospot"
 .PHONY : CMakeFiles/Algospot.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/Algospot.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /Volumes/IMGBND06_smc/TIL/algospot/cmake-build-debug/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /Volumes/IMGBND06_smc/TIL/algospot/cmake-build-debug/CMakeFiles 3
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/Algospot.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /Volumes/IMGBND06_smc/TIL/algospot/cmake-build-debug/CMakeFiles 0
 .PHONY : CMakeFiles/Algospot.dir/rule

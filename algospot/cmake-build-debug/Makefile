@@ -143,6 +143,33 @@ Algospot/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/build
 .PHONY : Algospot/fast
 
+WILDCARD.o: WILDCARD.cpp.o
+
+.PHONY : WILDCARD.o
+
+# target to build an object file
+WILDCARD.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/WILDCARD.cpp.o
+.PHONY : WILDCARD.cpp.o
+
+WILDCARD.i: WILDCARD.cpp.i
+
+.PHONY : WILDCARD.i
+
+# target to preprocess a source file
+WILDCARD.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/WILDCARD.cpp.i
+.PHONY : WILDCARD.cpp.i
+
+WILDCARD.s: WILDCARD.cpp.s
+
+.PHONY : WILDCARD.s
+
+# target to generate assembly for a file
+WILDCARD.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Algospot.dir/build.make CMakeFiles/Algospot.dir/WILDCARD.cpp.s
+.PHONY : WILDCARD.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -179,6 +206,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... Algospot"
+	@echo "... WILDCARD.o"
+	@echo "... WILDCARD.i"
+	@echo "... WILDCARD.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"

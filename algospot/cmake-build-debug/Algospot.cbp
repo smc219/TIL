@@ -80,6 +80,9 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/Volumes/IMGBND06_smc/TIL/algospot/WILDCARD.cpp">
+			<Option target="Algospot"/>
+		</Unit>
 		<Unit filename="/Volumes/IMGBND06_smc/TIL/algospot/main.cpp">
 			<Option target="Algospot"/>
 		</Unit>

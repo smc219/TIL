@@ -1,4 +1,4 @@
-
+#if 0
 #include <stdio.h>
 #include <string.h>
 int N;
@@ -41,3 +41,4 @@ int main(void)
 
     return 0;
 }
+#endif
